@@ -34,25 +34,35 @@ class FancyFormatter(logging.Formatter):
         super(FancyFormatter, self).__init__(fmt, datefmt)
 
         # Enable SQLAlchemy formatting by default
-        self.formats = {
-            SqlalchemyFormat.name: SqlalchemyFormat(),
-        }
+        self._formats = [
+            SqlalchemyFormat(),
+        ]
+
+        self._default_format = DefaultFormat(fmt)
+
+        #: A mapping of logger names to their Format instances.
+        self._cache = {}
 
     def addFormat(self, format):
-        self.formats[format.name] = format
+        self._formats.append(format)
+        self._cache.clear()
 
     def format(self, record):
         name = record.name
-        format = self.formats.get(name)
 
+        format = self._cache.get(name)
         if format is None:
-            fmt = self._fmt
-            message = record.getMessage().rstrip()
-            display_name = colors.cyan(name)
-        else:
-            fmt = format.fmt or self._fmt
-            message = format.getMessage(self, record).rstrip()
-            display_name = format.display_name
+            for f in self._formats:
+                if f.shouldFormat(name):
+                    self._cache[name] = f
+                    format = f
+                    break
+            else:
+                format = self._default_format
+
+        fmt = format.fmt or self._fmt
+        message = format.getMessage(record).rstrip()
+        display_name = format.getName(name)
 
         s = fmt % dict(
             record.__dict__,
@@ -108,28 +118,42 @@ class Format(object):
     Custom formatting definition for a logger.
     """
 
-    #: The logger name that this format should apply to.
-    name = None
-
-    #: How the logger name should be displayed in the log line.
-    #: You can override it for brevity or to add color.
-    display_name = None
-
     #: An optional custom format string to use for this log line.
     fmt = None
 
-    def getMessage(self, formatter, record):
+    def shouldFormat(self, logger_name):
+        return False
+
+    def getName(self, name):
+        return name
+
+    def getMessage(self, record):
         """
         Generate the formatted message string for insertion into the fmt
         string.
         """
+        return record.getMessage()
+
+
+class DefaultFormat(Format):
+    def __init__(self, fmt):
+        self.fmt = fmt
+
+    def getName(self, name):
+        return colors.cyan(name)
+
+    def shouldFormat(self, logger_name):
+        return True
 
 
 class SqlalchemyFormat(Format):
-    name = 'sqlalchemy.engine.base.Engine'
-    display_name = colors.green('sqlalchemy')
+    def shouldFormat(self, logger_name):
+        return logger_name == 'sqlalchemy.engine.base.Engine'
 
-    def getMessage(self, formatter, record):
+    def getName(self, name):
+        return colors.green('sqlalchemy')
+
+    def getMessage(self, record):
         message = record.getMessage()
 
         if message[:1] == '(':
