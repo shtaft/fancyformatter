@@ -60,9 +60,12 @@ class FancyFormatter(logging.Formatter):
             else:
                 format = self._default_format
 
-        fmt = format.fmt or self._fmt
-        message = format.getMessage(record).rstrip()
-        display_name = format.getName(name)
+        try:
+            fmt = format.fmt or self._fmt
+            message = format.getMessage(record).rstrip()
+            display_name = format.getName(name)
+        except OutputOverride, e:
+            return e.output
 
         s = fmt % dict(
             record.__dict__,
@@ -163,3 +166,12 @@ class SqlalchemyFormat(Format):
             lexer = mysql_lexer
 
         return pygments.highlight(message, lexer, terminal_formatter)
+
+
+class OutputOverride(Exception):
+    """
+    Raise this from your custom Format to override the formatting
+    logic in FancyFormatter and use the given output string instead.
+    """
+    def __init__(self, output):
+        self.output = output
