@@ -22,12 +22,12 @@ mysql_lexer.add_filter(pygments_pprint_sql.SqlFilter())
 class FancyFormatter(logging.Formatter):
 
     LEVELS = {
-        'CRITICAL': colors.magenta(' CRIT'),
+        'CRITICAL': colors.magenta('CRIT'),
         'DEBUG': colors.blue('DEBUG'),
         'ERROR': colors.red('ERROR'),
         'EVENT': colors.green('EVENT', bold=True),
-        'INFO': colors.blue(' INFO'),
-        'WARNING': colors.red(' WARN', bold=True),
+        'INFO': colors.blue('INFO'),
+        'WARNING': colors.red('WARN', bold=True),
     }
 
     def __init__(self, fmt=None, datefmt=None):
