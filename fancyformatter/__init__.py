@@ -71,6 +71,7 @@ class FancyFormatter(logging.Formatter):
             record.__dict__,
             name=display_name,
             asctime=colors.green(self.formatTime(record, self.datefmt), bold=1),
+            msecs_str=colors.green(',%03d' % record.msecs, bold=1),
             levelname=self.LEVELS.get(record.levelname, record.levelname),
             threadName=colors.yellow(record.threadName, bold=1),
             message='%(message)s',
