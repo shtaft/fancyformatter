@@ -14,4 +14,8 @@ setup(
         'Intended Audience :: Developers',
     ],
     packages=find_packages(),
+    install_requires=[
+        'pygments==2.1',
+        'pygments_pprint_sql==0.1.0',
+    ],
 )
