@@ -30,7 +30,7 @@ class FancyFormatter(logging.Formatter):
         'WARNING': colors.red('WARN', bold=True),
     }
 
-    def __init__(self, fmt=None, datefmt=None):
+    def __init__(self, fmt=None, datefmt=None, style='%'):
         super(FancyFormatter, self).__init__(fmt, datefmt)
 
         # Enable SQLAlchemy formatting by default
@@ -64,7 +64,7 @@ class FancyFormatter(logging.Formatter):
             fmt = format.fmt or self._fmt
             message = format.getMessage(record).rstrip()
             display_name = format.getName(name)
-        except OutputOverride, e:
+        except OutputOverride as e:
             return e.output
 
         s = fmt % dict(
